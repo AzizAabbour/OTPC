@@ -75,10 +75,10 @@ class OtpService
             ->latest('id')
             ->first();
 
-        if ($latest) {
-            $secondsSinceCreation = Carbon::now()->diffInSeconds($latest->created_at);
+        if ($latest && $latest->created_at) {
+            $secondsSinceCreation = (int) abs(Carbon::now()->diffInSeconds($latest->created_at));
             if ($secondsSinceCreation < self::RESEND_COOLDOWN_SECONDS) {
-                $remainingCooldown = self::RESEND_COOLDOWN_SECONDS - $secondsSinceCreation;
+                $remainingCooldown = (int) ceil(self::RESEND_COOLDOWN_SECONDS - $secondsSinceCreation);
                 throw new Exception("Please wait {$remainingCooldown} seconds before requesting a new verification code.");
             }
         }
@@ -245,9 +245,9 @@ class OtpService
             ];
         }
 
-        $secondsSinceCreation = Carbon::now()->diffInSeconds($verification->created_at);
-        $cooldown = max(0, self::RESEND_COOLDOWN_SECONDS - $secondsSinceCreation);
-        $remainingExpiry = max(0, Carbon::now()->diffInSeconds($verification->expires_at, false));
+        $secondsSinceCreation = (int) abs(Carbon::now()->diffInSeconds($verification->created_at));
+        $cooldown = max(0, (int) ceil(self::RESEND_COOLDOWN_SECONDS - $secondsSinceCreation));
+        $remainingExpiry = max(0, (int) ceil(Carbon::now()->diffInSeconds($verification->expires_at, false)));
 
         return [
             'success' => true,

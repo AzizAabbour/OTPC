@@ -60,41 +60,57 @@ class WhatsAppService
 
         $url = "https://graph.facebook.com/{$this->apiVersion}/{$this->phoneNumberId}/messages";
 
-        // Official Meta WhatsApp Authentication Template Payload with COPY_CODE button support
-        $payload = [
-            'messaging_product' => 'whatsapp',
-            'recipient_type' => 'individual',
-            'to' => $cleanPhone,
-            'type' => 'template',
-            'template' => [
-                'name' => $this->templateName,
-                'language' => [
-                    'code' => $this->languageCode,
+        // Build template payload depending on template name
+        if ($this->templateName === 'hello_world') {
+            $payload = [
+                'messaging_product' => 'whatsapp',
+                'recipient_type' => 'individual',
+                'to' => $cleanPhone,
+                'type' => 'template',
+                'template' => [
+                    'name' => 'hello_world',
+                    'language' => [
+                        'code' => 'en_US',
+                    ],
                 ],
-                'components' => [
-                    [
-                        'type' => 'body',
-                        'parameters' => [
-                            [
-                                'type' => 'text',
-                                'text' => $otp,
+            ];
+        } else {
+            // Official Meta WhatsApp Authentication Template with OTP code & Copy button
+            $payload = [
+                'messaging_product' => 'whatsapp',
+                'recipient_type' => 'individual',
+                'to' => $cleanPhone,
+                'type' => 'template',
+                'template' => [
+                    'name' => $this->templateName,
+                    'language' => [
+                        'code' => $this->languageCode,
+                    ],
+                    'components' => [
+                        [
+                            'type' => 'body',
+                            'parameters' => [
+                                [
+                                    'type' => 'text',
+                                    'text' => $otp,
+                                ],
+                            ],
+                        ],
+                        [
+                            'type' => 'button',
+                            'sub_type' => 'url',
+                            'index' => '0',
+                            'parameters' => [
+                                [
+                                    'type' => 'text',
+                                    'text' => $otp,
+                                ],
                             ],
                         ],
                     ],
-                    [
-                        'type' => 'button',
-                        'sub_type' => 'url',
-                        'index' => '0',
-                        'parameters' => [
-                            [
-                                'type' => 'text',
-                                'text' => $otp,
-                            ],
-                        ],
-                    ],
                 ],
-            ],
-        ];
+            ];
+        }
 
         try {
             $response = Http::withToken($this->accessToken)
